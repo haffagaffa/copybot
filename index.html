@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Copy Bot</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f8f9fa;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      text-align: center;
+    }
+    h1 {
+      font-size: 3em;
+      margin-bottom: 20px;
+    }
+    iframe {
+      border: none;
+      width: 100%;
+      max-width: 600px;
+      height: 500px;
+    }
+    #timer {
+      font-size: 2.5em;
+      color: #e74c3c;
+    }
+    #form-container, #timer-container {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>The Copy Bot</h1>
+
+    <!-- Form Container -->
+    <div id="form-container">
+      <iframe 
+        src="https://docs.google.com/forms/d/e/1bQXt65jlhulmlFj8net5wZBBRvudnNKIctX_7sHh4p0/viewform?embedded=true" 
+        width="640" height="800" frameborder="0" marginheight="0" marginwidth="0">
+        Loading…
+      </iframe>
+    </div>
+
+    <!-- Timer Container -->
+    <div id="timer-container">
+      <p>The form is temporarily locked. Please wait:</p>
+      <div id="timer">11:00</div>
+    </div>
+  </div>
+
+  <script>
+    const timerContainer = document.getElementById("timer-container");
+    const formContainer = document.getElementById("form-container");
+    const timerElement = document.getElementById("timer");
+
+    // Gist URL
+    const gistUrl = "https://gist.githubusercontent.com/haffagaffa/copybot/raw/timer.json";
+
+    async function checkFormStatus() {
+      const response = await fetch(gistUrl);
+      const data = await response.json();
+      const timerStartTime = data.timerStartTime;
+
+      if (timerStartTime === 0) {
+        // If no timer is active, show the form
+        formContainer.style.display = "block";
+        timerContainer.style.display = "none";
+      } else {
+        // Calculate remaining time
+        const currentTime = new Date().getTime();
+        const elapsed = currentTime - timerStartTime;
+        const remaining = 11 * 60 * 1000 - elapsed; // 11 minutes
+
+        if (remaining > 0) {
+          // Show countdown timer
+          startCountdown(remaining);
+        } else {
+          // Timer expired, show the form
+          formContainer.style.display = "block";
+          timerContainer.style.display = "none";
+        }
+      }
+    }
+
+    function startCountdown(duration) {
+      formContainer.style.display = "none";
+      timerContainer.style.display = "block";
+
+      const endTime = new Date().getTime() + duration;
+
+      const interval = setInterval(() => {
+        const now = new Date().getTime();
+        const remaining = Math.max(0, endTime - now);
+
+        const minutes = Math.floor(remaining / (60 * 1000));
+        const seconds = Math.floor((remaining % (60 * 1000)) / 1000);
+
+        timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, "0")}`;
+
+        if (remaining <= 0) {
+          clearInterval(interval);
+          location.reload(); // Reload to show the form
+        }
+      }, 1000);
+    }
+
+    checkFormStatus();
+  </script>
+</body>
+</html>
